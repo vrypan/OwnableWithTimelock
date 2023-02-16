@@ -5,21 +5,17 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
- * @dev Contract module which provides access control mechanism, where
- * there is an account (an owner) that can be granted exclusive access to
- * specific functions.
- *
- * By default, the owner account will be the one that deploys the contract. This
- * can later be changed with {transferOwnership} and {acceptOwnership}.
- *
- * This module is used through inheritance. It will make available all functions
- * from parent (Ownable).
+ * @dev Extension to OpenZeppelin's Ownable that provides 
+ * a fallback owner that can be activated after a predefined delay
+ * unless the current owner cancels the transfer.
+ * 
+ * @title OwnableWithTimelock
+ * @author Panayotis Vryonis, vrypan.eth
  */
 
 abstract contract OwnableWithTimelock is Ownable {
     address private _fallbackOwner = address(0) ;
-    uint _delay = 365;
-    // uint _timelockInit = type(uint).max;
+    uint _delay = 365; // Delay is expressed in days. Default is 1 year.
     uint _timelockInit = 0;
 
     event TimelockInitiated(address fallbackOwner) ;
