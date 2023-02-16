@@ -6,12 +6,6 @@ import { ethers } from "hardhat";
 describe("OwnableWithTimelock", function () {
 
   async function deploySimpleToken() {
-    const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-    const ONE_GWEI = 1_000_000_000;
-
-    const lockedAmount = ONE_GWEI;
-    const unlockTime = (await time.latest()) + ONE_YEAR_IN_SECS;
-
     // Contracts are deployed using the first signer/account by default
     const [account1, account2] = await ethers.getSigners();
 
@@ -31,7 +25,7 @@ describe("OwnableWithTimelock", function () {
 
       const [addr, delay, timestamp ] = await simpleToken.getOwnerTimelock();
       expect(addr).to.equal(ethers.constants.AddressZero);
-      expect(delay).to.equal(365 * 24 * 60 * 60);
+      expect(delay).to.equal(365);
       expect(timestamp).to.equal(0);
     });
   });
@@ -76,7 +70,7 @@ describe("OwnableWithTimelock", function () {
           .to.emit(simpleToken, "TimelockCanceled");
     });
   });
-  describe("Scenario #1", function () {
+  describe("Scenario #1 - Transfer to account2", function () {
     var simpleToken, account1, account2  ;
     const now = Math.floor(Date.now() / 1000);
     it("Deploy Token - owner is account1", async function () {
@@ -90,17 +84,17 @@ describe("OwnableWithTimelock", function () {
       await expect(simpleToken.initOwnerUnlock() ).to.be.revertedWith("Address denied");
     });
     it("setOwnerTimelock( account2, 100 days )", async function () {
-      await simpleToken.setOwnerTimelock(account2.address, 60*60*24*100);
+      await simpleToken.setOwnerTimelock(account2.address, 100);
       const [addr, delay, timestamp ] = await simpleToken.getOwnerTimelock();
       expect(addr).to.equal(account2.address);
-      expect(delay).to.equal(100 * 24 * 60 * 60);
+      expect(delay).to.equal(100);
       expect(timestamp).to.equal(0);
     });
     it("initOwnerUnlock by account2 is successfull", async function () {
       await simpleToken.connect(account2).initOwnerUnlock();
       const [addr, delay, timestamp ] = await simpleToken.getOwnerTimelock();
       expect(addr).to.equal(account2.address);
-      expect(delay).to.equal(100 * 24 * 60 * 60);
+      expect(delay).to.equal(100);
       expect(timestamp).to.be.closeTo(now, 10); // 10 seconds diff accepted
     });
     it("+00 days - completeOwnerUnlock by account2 is is denied: Not yet", async function () {
@@ -122,7 +116,7 @@ describe("OwnableWithTimelock", function () {
       expect(await simpleToken.owner() ).to.equal(account2.address);
     });
   });
-  describe("Scenario #2", function () {
+  describe("Scenario #2 - Transfer canceled by account1", function () {
     var simpleToken, account1, account2  ;
     const now = Math.floor(Date.now() / 1000);
     it("Deploy Token - owner is account1", async function () {
@@ -133,17 +127,17 @@ describe("OwnableWithTimelock", function () {
       expect(await simpleToken.owner() ).to.equal(account1.address);      
     });
     it("setOwnerTimelock( account2, 100 days )", async function () {
-      await simpleToken.setOwnerTimelock(account2.address, 60*60*24*100);
+      await simpleToken.setOwnerTimelock(account2.address, 100);
       const [addr, delay, timestamp ] = await simpleToken.getOwnerTimelock();
       expect(addr).to.equal(account2.address);
-      expect(delay).to.equal(100 * 24 * 60 * 60);
+      expect(delay).to.equal(100);
       expect(timestamp).to.equal(0);
     });
     it("initOwnerUnlock by account2 is successfull", async function () {
       await simpleToken.connect(account2).initOwnerUnlock();
       const [addr, delay, timestamp ] = await simpleToken.getOwnerTimelock();
       expect(addr).to.equal(account2.address);
-      expect(delay).to.equal(100 * 24 * 60 * 60);
+      expect(delay).to.equal(100);
       expect(timestamp).to.be.closeTo(now, 10); // 10 seconds diff accepted
     });
     it("+00 days - completeOwnerUnlock by account2 is is denied: Not yet", async function () {
@@ -157,7 +151,7 @@ describe("OwnableWithTimelock", function () {
       await simpleToken.cancelOwnerUnlock();
       const [addr, delay, timestamp ] = await simpleToken.getOwnerTimelock();
       expect(addr).to.equal(account2.address);
-      expect(delay).to.equal(100 * 24 * 60 * 60);
+      expect(delay).to.equal(100);
       expect(timestamp).to.equal(0);
     });
     it("+101 days - completeOwnerUnlock by account2 fails.", async function () {

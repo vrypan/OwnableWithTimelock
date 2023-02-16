@@ -18,7 +18,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 abstract contract OwnableWithTimelock is Ownable {
     address private _fallbackOwner = address(0) ;
-    uint _delay = 365 days;
+    uint _delay = 365;
     // uint _timelockInit = type(uint).max;
     uint _timelockInit = 0;
 
@@ -29,9 +29,13 @@ abstract contract OwnableWithTimelock is Ownable {
         _timelockInit = 0;
     }
 
-    function setOwnerTimelock(address newFallbackOwner, uint delay) public virtual onlyOwner {
+    function setOwnerTimelock(address newFallbackOwner, uint delayDays) public virtual onlyOwner {
+        /*  Delay is expressed in days, as this is closer to the expected use
+            and it will make it more clear for users to check the timelock status
+            compared to using large numbers indicating seconds.
+        */
         _fallbackOwner = newFallbackOwner ;
-        _delay = delay;
+        _delay = delayDays;
         _resetTimelock();
     }
 
@@ -60,7 +64,7 @@ abstract contract OwnableWithTimelock is Ownable {
     function completeOwnerUnlock() public virtual {
         require(_timelockInit>0, "Not initialized");
         require(_msgSender() == _fallbackOwner, "Address denied");
-        require( block.timestamp > _timelockInit + _delay, "Not yet");
+        require( block.timestamp > _timelockInit + _delay*60*60*24, "Not yet");
         _resetTimelock();
         super._transferOwnership( _fallbackOwner );
     }
